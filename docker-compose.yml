@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: leadapi-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: lead_api
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app_pwd
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: leadapi-api
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: ["node", "dist/main.js"]
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: leadapi-pma
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
