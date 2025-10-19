@@ -42,5 +42,18 @@ services:
     ports:
       - "8080:80"
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: leadapi-rabbit
+    ports:
+      - "5672:5672"     # AMQP (app)
+      - "15672:15672"   # Management UI (browser)
+    environment:
+      RABBITMQ_DEFAULT_USER: lead-api
+      RABBITMQ_DEFAULT_PASS: lead-api-pwd
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+
 volumes:
   db_data:
+  rabbit_data:
