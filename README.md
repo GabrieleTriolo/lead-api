@@ -26,6 +26,15 @@ Once the environment is running, you can access the following services:
 - **Password:** `app_pwd`
 - **Database:** `lead_api`
 
+### RabbitMQ Management UI
+- **URL:** [http://localhost:15672/#/queues](http://localhost:15672/#/queues)  
+  (This is the web-based management interface for the broker – the internal AMQP port is 5672, this UI is on port 15672)
+- **Username:** `lead-api`
+- **Password:** `lead-api-pwd`
+
+Once logged in, you can view and manage virtual hosts, queues, exchanges, channels and connections. It’s especially useful to verify the queue names, message rates, and to check if consumers are attached correctly.
+
+
 ## Run tests
 
 ```bash

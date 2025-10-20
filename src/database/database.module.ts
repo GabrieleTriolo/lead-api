@@ -14,6 +14,8 @@ import { ConfigService } from '@nestjs/config';
         password: config.get<string>('DB_PASSWORD', 'app_pwd'),
         database: config.get<string>('DB_NAME', 'lead_api'),
         autoLoadEntities: true,
+        retryAttempts: 20,
+        retryDelay: 3000,
       }),
     }),
   ],

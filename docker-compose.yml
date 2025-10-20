@@ -23,12 +23,15 @@ services:
       context: .
       dockerfile: docker/api/Dockerfile
     container_name: leadapi-api
+    volumes:
+      - ./:/app
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "3000:3000"
-    command: ["node", "dist/main.js"]
+    command: npm run start:dev
 
   phpmyadmin:
     image: phpmyadmin:latest
