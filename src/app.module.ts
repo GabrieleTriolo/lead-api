@@ -4,15 +4,22 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { LeadsModule } from './leads/leads.module';
+import { LeadApplicantsModule } from './lead-applicants/lead-applicants.module';
+import { LeadSimulationsModule } from './lead-simulations/lead-simulations.module';
+import { IdempotencyStoreModule } from './idempotency-store/idempotency-store.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
-    RabbitmqModule
+    RabbitmqModule,
+    LeadsModule,
+    LeadApplicantsModule,
+    LeadSimulationsModule,
+    IdempotencyStoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule {}

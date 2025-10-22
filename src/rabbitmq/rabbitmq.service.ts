@@ -3,7 +3,6 @@ import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit {
-
   constructor(private readonly amqpConnection: AmqpConnection) {}
 
   async onModuleInit() {

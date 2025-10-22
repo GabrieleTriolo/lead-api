@@ -8,7 +8,10 @@ import { ConfigService } from '@nestjs/config';
     RabbitMQModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('RABBITMQ_URI', 'amqp://lead-api:lead-api-pwd@rabbitmq:5672'),
+        uri: configService.get<string>(
+          'RABBITMQ_URI',
+          'amqp://lead-api:lead-api-pwd@rabbitmq:5672',
+        ),
         connectionInitOptions: { wait: false },
         connectionManagerOptions: {
           reconnectTimeInSeconds: 15,
