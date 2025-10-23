@@ -39,6 +39,16 @@ export class LeadRepository {
     return txRepo.save(entity);
   }
 
+  async updateLeadInTx(
+    manager: EntityManager,
+    id: string,
+    patch: Partial<Lead>,
+  ) {
+    const txRepo = manager.getRepository(Lead);
+    await txRepo.update({ id }, patch as DeepPartial<Lead>);
+    return this.findByIdInTx(manager, id);
+  }
+
   findByIdInTx(manager: EntityManager, id: string) {
     return manager
       .getRepository(Lead)

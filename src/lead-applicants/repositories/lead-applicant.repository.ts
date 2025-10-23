@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, EntityManager, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, In, Repository } from 'typeorm';
 import { LeadApplicant } from '../entities/lead-applicant.entity';
 import { CreateLeadApplicantDto } from '../dto/create-lead-applicant.dto';
+import { UpdateLeadApplicantDto } from '../dto/update-lead-applicant.dto';
 
 @Injectable()
 export class LeadApplicantRepository {
@@ -18,7 +19,7 @@ export class LeadApplicantRepository {
   bulkCreateForLead(
     manager: EntityManager,
     leadId: string,
-    items: CreateLeadApplicantDto[],
+    items: CreateLeadApplicantDto[] | UpdateLeadApplicantDto[],
   ) {
     const txRepo = manager.getRepository(LeadApplicant);
     const rows: DeepPartial<LeadApplicant>[] = items.map((a) => ({
@@ -33,5 +34,32 @@ export class LeadApplicantRepository {
     }));
     const entities = txRepo.create(rows);
     return txRepo.save(entities);
+  }
+
+  async upsertForLeadInTx(
+    manager: EntityManager,
+    leadId: string,
+    items: UpdateLeadApplicantDto[],
+  ): Promise<void> {
+    const txRepo = manager.getRepository(LeadApplicant);
+
+    for (const item of items) {
+      if (item.id) {
+        const patch: DeepPartial<LeadApplicant> = {
+          type: item.type,
+          firstName: item.firstName,
+          lastName: item.lastName,
+          email: item.email,
+          birthDate: item.birthDate,
+          monthlyIncome:
+            item.monthlyIncome !== undefined
+              ? this.toMoney(item.monthlyIncome)
+              : undefined,
+          payFrequency: item.payFrequency,
+        };
+        await txRepo.update({ id: item.id, leadId }, patch);
+        await txRepo.findOne({ where: { id: item.id, leadId } });
+      }
+    }
   }
 }
