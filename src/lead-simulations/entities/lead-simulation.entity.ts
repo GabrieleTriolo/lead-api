@@ -4,6 +4,8 @@ import {
   ManyToOne,
   JoinColumn,
   Index,
+  Column,
+  CreateDateColumn,
 } from 'typeorm';
 import { Lead } from '../../leads/entities/lead.entity';
 
@@ -20,4 +22,7 @@ export class LeadSimulation {
   })
   @JoinColumn({ name: 'lead_id', referencedColumnName: 'id' })
   lead!: Lead;
+
+  @Column({ name: 'lead_id', type: 'bigint', unsigned: true })
+  leadId!: string;
 }

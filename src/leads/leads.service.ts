@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
@@ -6,14 +6,18 @@ import { LeadRepository } from './repositories/lead.repository';
 import { LeadApplicantRepository } from '../lead-applicants/repositories/lead-applicant.repository';
 import { Lead } from './entities/lead.entity';
 import { CrmPublisherService } from '../integrations/crm/crm-publisher.service';
+import { LeadSimulationsService } from '../lead-simulations/lead-simulations.service';
 
 @Injectable()
 export class LeadsService {
+  private readonly logger = new Logger(LeadsService.name);
+
   constructor(
     private readonly dataSource: DataSource,
     private readonly leadsRepo: LeadRepository,
     private readonly applicantsRepo: LeadApplicantRepository,
     private readonly crmPublisher: CrmPublisherService,
+    private readonly leadSimulations: LeadSimulationsService,
   ) {}
 
   async create(dto: CreateLeadDto) {
@@ -37,6 +41,10 @@ export class LeadsService {
     });
 
     void this.crmPublisher.publishLeadSync('create', created!);
+
+    this.leadSimulations
+      .createForLead(created!.id)
+      .catch((err) => this.logger.error('Failed to create lead simulation', err?.stack || String(err)));
     return created;
   }
 
