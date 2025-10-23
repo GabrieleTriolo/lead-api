@@ -5,6 +5,7 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 import { LeadRepository } from './repositories/lead.repository';
 import { LeadApplicantRepository } from '../lead-applicants/repositories/lead-applicant.repository';
 import { Lead } from './entities/lead.entity';
+import { CrmPublisherService } from '../integrations/crm/crm-publisher.service';
 
 @Injectable()
 export class LeadsService {
@@ -12,10 +13,11 @@ export class LeadsService {
     private readonly dataSource: DataSource,
     private readonly leadsRepo: LeadRepository,
     private readonly applicantsRepo: LeadApplicantRepository,
+    private readonly crmPublisher: CrmPublisherService,
   ) {}
 
   async create(dto: CreateLeadDto) {
-    return this.dataSource.transaction(async (manager) => {
+    const created = await this.dataSource.transaction(async (manager) => {
       const lead = await this.leadsRepo.createLeadInTx(manager, {
         phoneNumber: dto.phoneNumber,
         requestedLoan: dto.requestedLoan,
@@ -33,11 +35,14 @@ export class LeadsService {
 
       return this.leadsRepo.findByIdInTx(manager, lead.id);
     });
+
+    void this.crmPublisher.publishLeadSync('create', created!);
+    return created;
   }
 
   async update(id: number, dto: UpdateLeadDto) {
     const leadId = String(id);
-    return this.dataSource.transaction(async (manager) => {
+    const updated = await this.dataSource.transaction(async (manager) => {
       const existing = await this.leadsRepo.findByIdInTx(manager, leadId);
       if (!existing) {
         throw new NotFoundException(`Lead ${leadId} not found`);
@@ -79,5 +84,8 @@ export class LeadsService {
 
       return this.leadsRepo.findByIdInTx(manager, leadId);
     });
+
+    void this.crmPublisher.publishLeadSync('update', updated!);
+    return updated;
   }
 }

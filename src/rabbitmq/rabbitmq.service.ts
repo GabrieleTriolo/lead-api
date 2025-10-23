@@ -10,4 +10,8 @@ export class RabbitmqService implements OnModuleInit {
       await channel.assertQueue('crm.lead.process', { durable: true });
     });
   }
+
+  async sendToQueue(queue: string, payload: unknown): Promise<void> {
+    await this.amqpConnection.publish('', queue, payload as Record<string, any>);
+  }
 }

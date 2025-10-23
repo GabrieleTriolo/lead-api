@@ -6,9 +6,10 @@ import { Lead } from './entities/lead.entity';
 import { LeadApplicant } from '../lead-applicants/entities/lead-applicant.entity';
 import { LeadRepository } from './repositories/lead.repository';
 import { LeadApplicantRepository } from '../lead-applicants/repositories/lead-applicant.repository';
+import { CrmModule } from '../integrations/crm/crm.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Lead, LeadApplicant])],
+  imports: [TypeOrmModule.forFeature([Lead, LeadApplicant]), CrmModule],
   controllers: [LeadsController],
   providers: [LeadsService, LeadRepository, LeadApplicantRepository],
   exports: [LeadsService, TypeOrmModule],

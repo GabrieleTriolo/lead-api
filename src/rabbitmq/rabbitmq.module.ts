@@ -22,6 +22,6 @@ import { ConfigService } from '@nestjs/config';
     }),
   ],
   providers: [RabbitmqService],
-  exports: [RabbitMQModule],
+  exports: [RabbitMQModule, RabbitmqService],
 })
 export class RabbitmqModule {}
