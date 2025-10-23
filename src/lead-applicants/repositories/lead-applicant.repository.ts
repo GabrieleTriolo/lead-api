@@ -58,7 +58,6 @@ export class LeadApplicantRepository {
           payFrequency: item.payFrequency,
         };
         await txRepo.update({ id: item.id, leadId }, patch);
-        await txRepo.findOne({ where: { id: item.id, leadId } });
       }
     }
   }
