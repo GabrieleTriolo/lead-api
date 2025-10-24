@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, EntityManager, In, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { LeadApplicant } from '../entities/lead-applicant.entity';
 import { CreateLeadApplicantDto } from '../dto/create-lead-applicant.dto';
 import { UpdateLeadApplicantDto } from '../dto/update-lead-applicant.dto';
@@ -60,5 +60,15 @@ export class LeadApplicantRepository {
         await txRepo.update({ id: item.id, leadId }, patch);
       }
     }
+  }
+
+  async replaceForLeadInTx(
+    manager: EntityManager,
+    leadId: string,
+    items: CreateLeadApplicantDto[] | UpdateLeadApplicantDto[],
+  ): Promise<void> {
+    const txRepo = manager.getRepository(LeadApplicant);
+    await txRepo.delete({ leadId });
+    await this.bulkCreateForLead(manager, leadId, items);
   }
 }

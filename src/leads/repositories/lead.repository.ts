@@ -9,25 +9,8 @@ export class LeadRepository {
     @InjectRepository(Lead) private readonly repo: Repository<Lead>,
   ) {}
 
-  findByPhone(phoneNumber: string) {
-    return this.repo.findOne({
-      where: { phoneNumber },
-      relations: ['applicants'],
-    });
-  }
-
   findById(id: string) {
     return this.repo.findOne({ where: { id }, relations: ['applicants'] });
-  }
-
-  createLead(data: Partial<Lead>): Promise<Lead> {
-    const entity = this.repo.create(data);
-    return this.repo.save(entity);
-  }
-
-  async updateLead(id: string, patch: Partial<Lead>) {
-    await this.repo.update({ id }, patch);
-    return this.findById(id);
   }
 
   async createLeadInTx(
@@ -53,5 +36,18 @@ export class LeadRepository {
     return manager
       .getRepository(Lead)
       .findOne({ where: { id }, relations: ['applicants'] });
+  }
+
+  async findByPhoneInTx(
+    manager: EntityManager,
+    phoneNumber: string,
+  ): Promise<Lead | null> {
+    const qb = manager
+      .getRepository(Lead)
+      .createQueryBuilder('lead')
+      .leftJoinAndSelect('lead.applicants', 'applicants')
+      .setLock('pessimistic_write')
+      .where('lead.phoneNumber = :phone', { phone: phoneNumber });
+    return qb.getOne();
   }
 }

@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { LeadSimulation } from './entities/lead-simulation.entity';
 import { LeadSimulationsService } from './lead-simulations.service';
+import { IdempotencyStoreModule } from '../idempotency-store/idempotency-store.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([LeadSimulation])],
+  imports: [IdempotencyStoreModule],
   providers: [LeadSimulationsService],
-  exports: [LeadSimulationsService, TypeOrmModule],
+  exports: [LeadSimulationsService],
 })
 export class LeadSimulationsModule {}
