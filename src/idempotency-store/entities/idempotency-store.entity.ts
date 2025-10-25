@@ -23,9 +23,6 @@ export class IdempotencyStoreEntity {
   @Column({ name: 'expires_at', type: 'datetime' })
   expiresAt!: Date;
 
-  @Column({ name: 'response_status_code', type: 'int', nullable: true })
-  responseStatusCode: number | null;
-
   @Column({ name: 'response_body_json', type: 'json', nullable: true })
   responseBodyJson: unknown | null;
 

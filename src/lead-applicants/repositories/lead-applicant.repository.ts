@@ -12,10 +12,6 @@ export class LeadApplicantRepository {
     private readonly repo: Repository<LeadApplicant>,
   ) {}
 
-  private toMoney(v: number | string) {
-    return typeof v === 'number' ? v.toFixed(2) : v;
-  }
-
   bulkCreateForLead(
     manager: EntityManager,
     leadId: string,
@@ -36,32 +32,6 @@ export class LeadApplicantRepository {
     return txRepo.save(entities);
   }
 
-  async upsertForLeadInTx(
-    manager: EntityManager,
-    leadId: string,
-    items: UpdateLeadApplicantDto[],
-  ): Promise<void> {
-    const txRepo = manager.getRepository(LeadApplicant);
-
-    for (const item of items) {
-      if (item.id) {
-        const patch: DeepPartial<LeadApplicant> = {
-          type: item.type,
-          firstName: item.firstName,
-          lastName: item.lastName,
-          email: item.email,
-          birthDate: item.birthDate,
-          monthlyIncome:
-            item.monthlyIncome !== undefined
-              ? this.toMoney(item.monthlyIncome)
-              : undefined,
-          payFrequency: item.payFrequency,
-        };
-        await txRepo.update({ id: item.id, leadId }, patch);
-      }
-    }
-  }
-
   async replaceForLeadInTx(
     manager: EntityManager,
     leadId: string,
@@ -70,5 +40,9 @@ export class LeadApplicantRepository {
     const txRepo = manager.getRepository(LeadApplicant);
     await txRepo.delete({ leadId });
     await this.bulkCreateForLead(manager, leadId, items);
+  }
+
+  private toMoney(v: number | string) {
+    return typeof v === 'number' ? v.toFixed(2) : v;
   }
 }

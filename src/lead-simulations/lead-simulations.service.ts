@@ -4,6 +4,7 @@ import { LeadSimulation } from './entities/lead-simulation.entity';
 import { IdempotencyStoreService } from '../idempotency-store/idempotency-store.service';
 import { createHash } from 'crypto';
 import { LeadSimulationFingerprint } from './interfaces/lead-simulation-fingerprint.interface';
+import { SimulationResponse } from './interfaces/simulation-response.interface';
 
 @Injectable()
 export class LeadSimulationsService {
@@ -17,11 +18,11 @@ export class LeadSimulationsService {
   async createForLeadWithIdempotency(
     leadId: string,
     fingerprint: LeadSimulationFingerprint,
-  ): Promise<LeadSimulation> {
+  ): Promise<SimulationResponse> {
     const key = this.buildKey(leadId, fingerprint);
 
     return this.dataSource.transaction(async (manager) => {
-      return this.idempotency.runOrGetResource<LeadSimulation>(
+      return this.idempotency.runOrGetResource(
         manager,
         key,
         LeadSimulationsService.TEN_MINUTES_MS,

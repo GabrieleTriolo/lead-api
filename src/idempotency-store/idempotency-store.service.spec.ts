@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { IdempotencyStoreService } from './idempotency-store.service';
+import { Test, TestingModule } from '@nestjs/testing';
 
 describe('IdempotencyStoreService', () => {
   let service: IdempotencyStoreService;

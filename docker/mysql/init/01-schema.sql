@@ -46,7 +46,6 @@ CREATE TABLE IF NOT EXISTS `idempotency_store` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `idempotency_key` VARCHAR(128) NOT NULL,
     `expires_at` DATETIME NOT NULL,
-    `response_status_code` INT NULL,
     `response_body_json` JSON NULL,
     `resource_id` BIGINT UNSIGNED NULL,
     PRIMARY KEY (`id`),

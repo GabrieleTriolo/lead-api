@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger, ConflictException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { CreateLeadDto } from './dto/create-lead.dto';
 import { LeadRepository } from './repositories/lead.repository';
@@ -21,7 +21,7 @@ export class LeadsService {
 
   async upsertByPhone(dto: CreateLeadDto) {
     let action: 'create' | 'update' = 'create';
-    const result = await this.dataSource.transaction(async (manager) => {
+    const lead = await this.dataSource.transaction(async (manager) => {
       const existing = await this.leadsRepo.findByPhoneInTx(
         manager,
         dto.phoneNumber,
@@ -36,7 +36,11 @@ export class LeadsService {
           city: dto.city,
         };
         await this.leadsRepo.updateLeadInTx(manager, existing.id, patch);
-        await this.applicantsRepo.replaceForLeadInTx(manager, existing.id, dto.applicants);
+        await this.applicantsRepo.replaceForLeadInTx(
+          manager,
+          existing.id,
+          dto.applicants,
+        );
         return this.leadsRepo.findByIdInTx(manager, existing.id);
       }
 
@@ -46,23 +50,29 @@ export class LeadsService {
         homeValue: dto.homeValue,
         city: dto.city,
       });
-      await this.applicantsRepo.bulkCreateForLead(manager, created.id, dto.applicants);
+      await this.applicantsRepo.bulkCreateForLead(
+        manager,
+        created.id,
+        dto.applicants,
+      );
       return this.leadsRepo.findByIdInTx(manager, created.id);
     });
 
     // Publish CRM event
-    void this.crmPublisher.publishLeadSync(action, result!);
+    void this.crmPublisher.publishLeadSync(action, lead!);
 
     // Create idempotent simulation
-    this.leadSimulations
-      .createForLeadWithIdempotency(result!.id, {
-        requestedLoan: result!.requestedLoan,
-        homeValue: result!.homeValue,
-        city: result!.city,
+    return await this.leadSimulations
+      .createForLeadWithIdempotency(lead!.id, {
+        requestedLoan: lead!.requestedLoan,
+        homeValue: lead!.homeValue,
+        city: lead!.city,
       })
-      .catch((err) => this.logger.error('Failed to create lead simulation', err?.stack || String(err)));
-
-    return result;
+      .catch((err) =>
+        this.logger.error(
+          'Failed to create lead simulation',
+          err?.stack || String(err),
+        ),
+      );
   }
-
 }

@@ -5,7 +5,6 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 import { LeadsModule } from './leads/leads.module';
-import { LeadApplicantsModule } from './lead-applicants/lead-applicants.module';
 import { LeadSimulationsModule } from './lead-simulations/lead-simulations.module';
 import { IdempotencyStoreModule } from './idempotency-store/idempotency-store.module';
 
@@ -15,7 +14,6 @@ import { IdempotencyStoreModule } from './idempotency-store/idempotency-store.mo
     DatabaseModule,
     RabbitmqModule,
     LeadsModule,
-    LeadApplicantsModule,
     LeadSimulationsModule,
     IdempotencyStoreModule,
   ],

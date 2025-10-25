@@ -1,12 +1,9 @@
 import {
   IsDate,
-  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
-  Matches,
   MaxLength,
-  Min,
 } from 'class-validator';
 
 export class CreateIdempotencyStoreDto {
@@ -18,10 +15,6 @@ export class CreateIdempotencyStoreDto {
   @IsNotEmpty()
   @IsDate()
   expiresAt!: Date;
-
-  @IsOptional()
-  @IsInt()
-  responseStatusCode?: number;
 
   @IsOptional()
   responseBodyJson?: unknown;
