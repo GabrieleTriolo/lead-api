@@ -6,6 +6,7 @@ import { LeadApplicantRepository } from '../lead-applicants/repositories/lead-ap
 import { Lead } from './entities/lead.entity';
 import { CrmPublisherService } from '../integrations/crm/crm-publisher.service';
 import { LeadSimulationsService } from '../lead-simulations/lead-simulations.service';
+import { SimulationResponse } from '../lead-simulations/interfaces/simulation-response.interface';
 
 @Injectable()
 export class LeadsService {
