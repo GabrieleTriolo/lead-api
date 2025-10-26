@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository, MoreThan, EntityManager } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IdempotencyStoreEntity } from './entities/idempotency-store.entity';
 import { LeadSimulation } from '../lead-simulations/entities/lead-simulation.entity';
@@ -22,60 +22,64 @@ export class IdempotencyStoreService {
     const storeRepo = manager.getRepository(IdempotencyStoreEntity);
 
     const existing = await storeRepo.findOne({
-      where: { idempotencyKey: key, expiresAt: MoreThan(now) },
+      where: { idempotencyKey: key },
       relations: ['resource'],
-      lock: undefined,
     });
 
-    if (existing?.responseBodyJson) {
+    if (existing && existing.expiresAt > now && existing.responseBodyJson) {
       const cached = existing.responseBodyJson as SimulationResponse;
       return { ...cached, cached: true };
     }
 
-    // Not found or expired: create the resource and persist a mock response body
+    // Not found or expired: create/update the resource mapping and persist a mock response body
     const resource = await createResource();
     const expiresAt = new Date(now.getTime() + ttlMs);
 
     const response: SimulationResponse = this.buildMockResponse(
       resource,
-      key,
       expiresAt,
       false,
     );
 
     try {
-      const row = storeRepo.create({
-        idempotencyKey: key,
-        expiresAt,
-        resource,
-        responseBodyJson: response as unknown,
-      });
-      await storeRepo.save(row);
+      if (existing) {
+        // Update the existing row
+        existing.expiresAt = expiresAt;
+        existing.resource = resource;
+        existing.responseBodyJson = response;
+        await storeRepo.save(existing);
+      } else {
+        const row = storeRepo.create({
+          idempotencyKey: key,
+          expiresAt,
+          resource,
+          responseBodyJson: response,
+        });
+        await storeRepo.save(row);
+      }
       return response;
     } catch (err) {
-      // In case of race, fetch the existing valid record and return its JSON response if any
+      // In case of race, fetch the existing record and return its JSON response if any and still valid
       const again = await storeRepo.findOne({
-        where: { idempotencyKey: key, expiresAt: MoreThan(now) },
+        where: { idempotencyKey: key },
         relations: ['resource'],
       });
-      if (again?.responseBodyJson) {
+      if (again && again.expiresAt > now && again.responseBodyJson) {
         const cached = again.responseBodyJson as SimulationResponse;
         return { ...cached, cached: true };
       }
-      // If still not found, fallback to response we built
+      // If still not found, fallback to the response we built
       return response;
     }
   }
 
   private buildMockResponse(
     resource: LeadSimulation,
-    idempotencyKey: string,
     expiresAt: Date,
     cached: boolean,
   ): SimulationResponse {
     return {
       cached,
-      idempotencyKey,
       expiresAt: expiresAt.toISOString(),
       simulationId: String(resource.id),
       results: {

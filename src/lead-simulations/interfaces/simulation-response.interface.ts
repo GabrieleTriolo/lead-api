@@ -1,6 +1,5 @@
 export interface SimulationResponse {
   cached: boolean;
-  idempotencyKey: string;
   expiresAt: string;
   simulationId: string;
   results: {

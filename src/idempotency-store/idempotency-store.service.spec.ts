@@ -1,6 +1,6 @@
 import { IdempotencyStoreService } from './idempotency-store.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { EntityManager, MoreThan, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { IdempotencyStoreEntity } from './entities/idempotency-store.entity';
 import { LeadSimulation } from '../lead-simulations/entities/lead-simulation.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -65,9 +65,8 @@ describe('IdempotencyStoreService', () => {
     // Assert
     expect(result).toEqual({ ...cached, cached: true });
     expect(repo.findOne).toHaveBeenCalledWith({
-      where: { idempotencyKey: key, expiresAt: MoreThan(now) },
+      where: { idempotencyKey: key },
       relations: ['resource'],
-      lock: undefined,
     });
   });
 
@@ -93,8 +92,40 @@ describe('IdempotencyStoreService', () => {
     // Assert
     expect(repo.save).toHaveBeenCalledTimes(1);
     expect(result.cached).toBe(false);
-    expect(result.idempotencyKey).toBe(key);
     expect(result.simulationId).toBe('42');
+    expect(new Date(result.expiresAt).getTime()).toBe(now.getTime() + ttl);
+  });
+
+  it('updates existing expired row by key', async () => {
+    // Arrange
+    const key = 'k2b';
+    const ttl = 60000;
+    const expired = new Date(now.getTime() - 1000);
+    const existing = buildStoreRow({ idempotencyKey: key, expiresAt: expired, responseBodyJson: { old: true } as any });
+    const repo: any = {
+      findOne: jest.fn().mockResolvedValue(existing),
+      save: jest.fn().mockImplementation(async (row: any) => row),
+      create: jest.fn(),
+    };
+    const manager = makeManager(repo);
+
+    // Act
+    const result = await service.runOrGetResource(
+      manager,
+      key,
+      ttl,
+      async () => ({ id: '77', leadId: 'L-77' } as LeadSimulation),
+    );
+
+    // Assert
+    expect(repo.create).not.toHaveBeenCalled();
+    expect(repo.save).toHaveBeenCalledTimes(1);
+    const savedArg = repo.save.mock.calls[0][0];
+    expect(savedArg.idempotencyKey).toBe(key);
+    expect(savedArg.resource.id).toBe('77');
+    expect(savedArg.expiresAt.getTime()).toBe(now.getTime() + ttl);
+    expect(result.cached).toBe(false);
+    expect(result.simulationId).toBe('77');
     expect(new Date(result.expiresAt).getTime()).toBe(now.getTime() + ttl);
   });
 
@@ -136,7 +167,6 @@ describe('IdempotencyStoreService', () => {
 
     expect(repo.findOne).toHaveBeenCalledTimes(2);
     expect(result.cached).toBe(false);
-    expect(result.idempotencyKey).toBe(key);
     expect(result.simulationId).toBe('55');
   });
 });
